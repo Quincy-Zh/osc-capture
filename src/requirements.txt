@@ -1,0 +1,4 @@
+# requirements.txt
+PyVISA
+pyusb
+PySide6
