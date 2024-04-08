@@ -2,3 +2,8 @@
 PyVISA
 pyusb
 PySide6
+
+# pyvisa-py
+pyvisa-py
+pyserial
+psutil

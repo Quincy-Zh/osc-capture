@@ -110,37 +110,40 @@ class DialogFindDevice(QDialog):
                 self.itemFound.emit(id)
         except Exception as ex:
             logger.warning(ex)
+        
+        try:
+            rm = pyvisa.ResourceManager('@py')
 
-        rm = pyvisa.ResourceManager()
+            for res in rm.list_resources():
+                err = ""
+                model = "?"
+                manf = "?"
+                try:
+                    dev = rm.open_resource(res)
+                    model = dev.get_visa_attribute(pyvisa.constants.VI_ATTR_MODEL_NAME)
+                    manf = dev.get_visa_attribute(pyvisa.constants.VI_ATTR_MANF_NAME)
+                    dev.close()
 
-        for res in rm.list_resources():
-            err = ""
-            model = "?"
-            manf = "?"
-            try:
-                dev = rm.open_resource(res)
-                model = dev.get_visa_attribute(pyvisa.constants.VI_ATTR_MODEL_NAME)
-                manf = dev.get_visa_attribute(pyvisa.constants.VI_ATTR_MANF_NAME)
-                dev.close()
+                    logger.debug("New Entry: {}, {}, {}".format(model, manf, res))
 
-                logger.debug("New Entry: {}, {}, {}".format(model, manf, res))
-
-            except pyvisa.errors.VisaIOError as ex:
-                if ex.error_code != pyvisa.constants.VI_ERROR_NSUP_ATTR:
+                except pyvisa.errors.VisaIOError as ex:
+                    if ex.error_code != pyvisa.constants.VI_ERROR_NSUP_ATTR:
+                        err = str(ex)
+                except Exception as ex:
                     err = str(ex)
-            except Exception as ex:
-                err = str(ex)
 
-            if len(err) > 0:
-                logger.warning(err)
+                if len(err) > 0:
+                    logger.warning(err)
 
-            if model in self.modelMap:
-                title = self.modelMap[model]
-            else:
-                title = "?"
+                if model in self.modelMap:
+                    title = self.modelMap[model]
+                else:
+                    title = "?"
 
-            id = "{0}|{1}|{2}|{3}".format(title, model, manf, res)
-            self.itemFound.emit(id)
+                id = "{0}|{1}|{2}|{3}".format(title, model, manf, res)
+                self.itemFound.emit(id)
+        except Exception as ex:
+            logger.warning(ex)
 
         self.itemFound.emit("")
 
