@@ -1,11 +1,12 @@
 # 获取示波器截图
 
+import os
 import logging
 import pyvisa
-from instruments import mdo32, mxr208a, zds1000, utils
+from instruments import dso_x_3024t, mdo32, mxr208a, zds1000, utils
 
 
-logger = logging.getLogger("OscCapture")
+logger = logging.getLogger("Capture")
 
 
 def zds_cap(a, param):
@@ -18,27 +19,39 @@ def zds_cap(a, param):
     if cap is None:
         return ""
 
-    f = utils.get_filepath(param["output"])
-    f.replace(".png", ".bmp")
-    zds1000.save_definite_length_block_data(cap, f)
+    filename, ts = utils.get_filepath()
+    filepath = os.path.join(param["output"], filename + ".bmp")
+    zds1000.save_definite_length_block_data(cap, filepath)
 
     z.kill()
 
-    return f
+    if not utils.addWaterMark(filepath, ts, x=5, y=10):
+        logger.warning("添加水印失败~")
+
+    return filepath
 
 
 class Capture:
-    prepFuncMap = {"MDO32": mdo32.prepare, "MXR208A": mxr208a.prepare}
+    prepFuncMap = {
+        "DSO-X 3024T": dso_x_3024t.prepare,
+        "MDO32": mdo32.prepare,
+        "MXR208A": mxr208a.prepare,
+    }
     capFuncMap = {
+        "DSO-X 3024T": dso_x_3024t.capture,
         "MDO32": mdo32.capture,
         "MXR208A": mxr208a.capture,
         "ZDS1000": zds_cap,
+    }
+    ctrlFuncMap = {
+        "DSO-X 3024T": dso_x_3024t.ctrl,
     }
 
     def __init__(self, output_dir) -> None:
         #
         self.res = None
         self.fn = None
+        self.fn_ctrl = None
         self.param = {"output": output_dir}
 
     def is_connected(self):
@@ -55,6 +68,9 @@ class Capture:
             return (False, "尚未支持的设备")
 
         self.fn = self.capFuncMap[model]
+
+        if model in self.ctrlFuncMap:
+            self.fn_ctrl = self.ctrlFuncMap[model]
 
         if model == "ZDS1000":
             self.res = model
@@ -100,6 +116,17 @@ class Capture:
                 logger.warning(str(ex))
 
         return (err, path)
+
+    def ctrl(self, cmd: str) -> int:
+        if not self.is_connected():
+            err = -1
+
+        if self.fn_ctrl is None:
+            err = 1
+        else:
+            err = self.fn_ctrl(self.res, cmd)
+
+        return err
 
 
 if __name__ == "__main__":

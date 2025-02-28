@@ -13,13 +13,14 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QCheckBox,
     QLabel,
 )
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QFileDialog
 from PySide6.QtWidgets import QMenu
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QTimer
 
 from find_device import DialogFindDevice
 from capture import Capture
@@ -53,14 +54,18 @@ logger.addHandler(consoleHandler)
 
 
 class MainWindow(QMainWindow):
+    winTitle = "示波器截图助手"
+
     def __init__(self):
         super().__init__()
 
-        self.output_dir = tempfile.mkdtemp(prefix='osc_cap_')
+        self.output_dir = tempfile.mkdtemp(prefix="osc_cap_")
         self.savedImageIndex = 0
         self.setupUi()
         self.capture = Capture(self.output_dir)
         logger.info("output_dir: " + self.output_dir)
+
+        QTimer.singleShot(500, self.do_connect)
 
     def closeEvent(self, event):
         if (
@@ -87,7 +92,7 @@ class MainWindow(QMainWindow):
         ## File
         menu_file = QMenu("文件(&F)")
         self.menuBar().addMenu(menu_file)
-        actionConnect = menu_file.addAction("连接(&C)")
+        self.actionConnect = menu_file.addAction("连接(&C)")
         menu_file.addSeparator()
         actionExit = menu_file.addAction("退出(&X)")
 
@@ -105,11 +110,13 @@ class MainWindow(QMainWindow):
         self.imageWidget = ImageWidget()
 
         # Button
+        self.checkBoxInkSaver = QCheckBox("Ink Save")
         self.pushbuttonCapture = QPushButton("截图(&C)")
         self.pushbuttonSave = QPushButton("保存(&S)")
 
         layout_buttons = QHBoxLayout()
         layout_buttons.addStretch()
+        layout_buttons.addWidget(self.checkBoxInkSaver)
         layout_buttons.addWidget(self.pushbuttonCapture)
         layout_buttons.addWidget(self.pushbuttonSave)
 
@@ -136,14 +143,15 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.labelInfo)
 
         self.listWidgetImages.doubleClicked.connect(self.do_show)
+        self.checkBoxInkSaver.checkStateChanged.connect(self.ink_save_changed)
         self.pushbuttonCapture.clicked.connect(self.do_capture)
         self.pushbuttonSave.clicked.connect(self.do_save)
-        actionConnect.triggered.connect(self.do_connect)
+        self.actionConnect.triggered.connect(self.do_connect)
         actionExit.triggered.connect(self.close)
         actionAbout.triggered.connect(self.about)
         actionAboutQt.triggered.connect(self.aboutQt)
 
-        self.setWindowTitle("示波器截图助手")
+        self.setWindowTitle(self.winTitle)
         self.resize(1024, 768)
         iconpath = os.path.join(mydir, "icon.png")
         self.setWindowIcon(QIcon(iconpath))
@@ -163,18 +171,12 @@ class MainWindow(QMainWindow):
 
     def do_connect(self):
         if self.capture.is_connected():
-            res = QMessageBox.question(
-                self,
-                "提示",
-                "已经连接到仪器，是否先断开",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.Yes,
-            )
-
-            if res == QMessageBox.StandardButton.No:
-                return
-
             self.capture.disconnect()
+            self.actionConnect.setText("连接(&C)")
+            self.labelInfo.setText("未连接")
+            self.setWindowTitle(self.winTitle)
+
+            return
 
         #
         dlg = DialogFindDevice(self)
@@ -184,12 +186,15 @@ class MainWindow(QMainWindow):
             return
 
         addr, model = dlg.get_result()
-        self.labelInfo.setText("已连接：{}".format(model))
 
         ok, err = self.capture.connect_to(addr, model)
         if not ok:
             QMessageBox.information(self, "错误", "不能连接到设备\n    {}".format(err))
             return
+
+        self.setWindowTitle("{} - {}".format(self.winTitle, model))
+        self.labelInfo.setText("已连接：{}".format(model))
+        self.actionConnect.setText("断开(&C)")
 
     def __entry(self):
         self.setCursor(Qt.CursorShape.WaitCursor)
@@ -202,6 +207,24 @@ class MainWindow(QMainWindow):
         self.pushbuttonCapture.setEnabled(True)
         self.pushbuttonSave.setEnabled(True)
         self.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def ink_save_changed(self):
+        if not self.capture.is_connected():
+            QMessageBox.information(self, "错误", "尚未连接")
+            self.checkBoxInkSaver.setChecked(False)
+            return
+
+        if self.checkBoxInkSaver.isChecked():
+            res = self.capture.ctrl("INKSAVE:ON")
+        else:
+            res = self.capture.ctrl("INKSAVE:OFF")
+
+        if res > 0:
+            QMessageBox.warning(self, "提示", "设备不支持该命令")
+        elif res < 0:
+            QMessageBox.critical(self, "错误", "发生错误~")
+        else:
+            pass
 
     def do_capture(self):
         if not self.capture.is_connected():

@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QTimer
 
 from instruments.zds1000 import ZDS
 
@@ -63,6 +63,8 @@ class DialogFindDevice(QDialog):
 
         self.target = ""
         self.model = ""
+
+        QTimer.singleShot(500, self.search)
 
     def search(self):
         # Clear rows

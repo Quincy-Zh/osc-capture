@@ -1,6 +1,6 @@
 #
 # Tektronix 3 Series MDO Oscilloscopes
-
+import os
 from datetime import datetime
 from .utils import get_filepath
 
@@ -19,19 +19,21 @@ def prepare(instrument):
         print(ex)
 
     # 测试哪个驱动器可用
-    rc = ''
-    dirname = now.strftime('TEM_%Y%m%d_%H%M%S')
-    for driver in  ('E:', 'F:', 'G:'):
-        res = ''
+    rc = ""
+    dirname = now.strftime("TEM_%Y%m%d_%H%M%S")
+    for driver in ("E:", "F:", "G:"):
+        res = ""
         try:
-            path = driver + '/' + dirname
+            path = driver + "/" + dirname
             # print('Mkdir:', path)
 
             instrument.write('FILESYSTEM:MKDIR "{}"'.format(path))
             instrument.write('FILESystem:CWD "{}"'.format(path))
-            instrument.write('FILESystem:WRITEFile "{}/aa.txt", #213Hello, World!'.format(path))
+            instrument.write(
+                'FILESystem:WRITEFile "{}/aa.txt", #213Hello, World!'.format(path)
+            )
 
-            res += instrument.query('FILESystem:DIR?')
+            res += instrument.query("FILESystem:DIR?")
             instrument.write('FILESystem:DELEte "{}"'.format(path))
         except Exception as ex:
             print(ex)
@@ -43,19 +45,18 @@ def prepare(instrument):
             # print('[', res, ']-->', driver)
             break
 
-    if rc == '':
+    if rc == "":
         # 没有驱动器可用
-        return ('MDO32 示波器需要外部存储设备，但是没有任何可用的设备', None)
+        return ("MDO32 示波器需要外部存储设备，但是没有任何可用的设备", None)
     else:
-        return ('', {'driver': rc})
+        return ("", {"driver": rc})
+
 
 def capture(instrument, param):
-    if param is None \
-        or 'driver' not in param \
-        or 'output' not in param:
-        return ''
-    
-    filepath = param['driver'] + '/tmp.png'
+    if param is None or "driver" not in param or "output" not in param:
+        return ""
+
+    filepath = param["driver"] + "/tmp.png"
 
     cmd = 'SAVe:IMAGe "{}"'.format(filepath)
 
@@ -66,10 +67,11 @@ def capture(instrument, param):
         res = instrument.write(cmd)
     except Exception as ex:
         print(ex)
-        return ''
+        return ""
 
-    f = get_filepath(param['output'])    
-    fd = open(f, 'wb')
+    filename, _ = get_filepath()
+    filepath = os.path.join(param["output"], filename + ".png")
+    fd = open(filepath, "wb")
 
     while True:
         try:
@@ -81,4 +83,4 @@ def capture(instrument, param):
 
     fd.close()
 
-    return f
+    return filepath
