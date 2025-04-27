@@ -1,5 +1,6 @@
 #
 # DSO-X 3024T
+import os
 import pyvisa
 from datetime import datetime
 from .utils import get_filepath
@@ -83,8 +84,9 @@ def capture(instrument, param):
 
     w = res[1] - 0x30
 
-    f = get_filepath(param["output"])
-    with open(f, "wb") as fd:
+    filename, _ = get_filepath()
+    filepath = os.path.join(param["output"], filename + ".png")
+    with open(filepath, "wb") as fd:
         fd.write(res[w + 2 :])
 
-    return f
+    return filepath

@@ -59,7 +59,7 @@ def capture(instrument, param):
 
     w = res[1] - 0x30
 
-    filename, _ = get_filepath(param["output"])
+    filename, _ = get_filepath()
     filepath = os.path.join(param["output"], filename + ".png")
     with open(filepath, "wb") as fd:
         fd.write(res[w + 2 :])

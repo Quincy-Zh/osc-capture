@@ -21,7 +21,7 @@ logger = logging.getLogger("OscCapture")
 
 
 class DialogFindDevice(QDialog):
-    modelMap = {"MDO32": "示波器", "MXR208A": "示波器"}
+    modelMap = {"MDO32": "示波器", "MXR208A": "示波器", "DSO-X 3014T": "示波器"}
     tableLabels = ("类型", "型号", "厂商", "地址")
     itemFound = Signal(str)
 
@@ -114,7 +114,7 @@ class DialogFindDevice(QDialog):
             logger.warning(ex)
         
         try:
-            rm = pyvisa.ResourceManager('@py')
+            rm = pyvisa.ResourceManager()
 
             for res in rm.list_resources():
                 err = ""

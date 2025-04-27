@@ -33,17 +33,20 @@ def zds_cap(a, param):
 
 class Capture:
     prepFuncMap = {
+        "DSO-X 3014T": dso_x_3024t.prepare,
         "DSO-X 3024T": dso_x_3024t.prepare,
         "MDO32": mdo32.prepare,
         "MXR208A": mxr208a.prepare,
     }
     capFuncMap = {
+        "DSO-X 3014T": dso_x_3024t.capture,
         "DSO-X 3024T": dso_x_3024t.capture,
         "MDO32": mdo32.capture,
         "MXR208A": mxr208a.capture,
         "ZDS1000": zds_cap,
     }
     ctrlFuncMap = {
+        "DSO-X 3014T": dso_x_3024t.ctrl,
         "DSO-X 3024T": dso_x_3024t.ctrl,
     }
 
@@ -131,7 +134,7 @@ class Capture:
 
 if __name__ == "__main__":
     eq = Capture(".")
-    ok, err = eq.connect_to("USB0::0x2A8D::0x9007::MY60320114::INSTR", "MXR208A")
+    ok, err = eq.connect_to("USB0::0x2A8D::0x1768::MY62510194::INSTR", "DSO-X 3014T")
 
     if ok:
         err, f = eq.exec()
