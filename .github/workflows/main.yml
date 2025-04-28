@@ -4,7 +4,7 @@ on:
   # 可根据需求修改触发条件，这里设置为推送到 master 分支时触发
   push:
     branches:
-      - main
+      - master
 
 jobs:
   build:
