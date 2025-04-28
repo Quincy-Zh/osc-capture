@@ -15,4 +15,6 @@ pyinstaller -n osc-capture ^
 -i .\src\icon.ico ^
 -w .\src\main.py
 
+7z a dist\osc-capture.7z .\dist\osc-capture\* -mx
+
 echo Done!
