@@ -15,8 +15,4 @@ pyinstaller -n osc-capture ^
 -i .\src\icon.ico ^
 -w .\src\main.py
 
-cd dist
-"C:\Program Files\7-Zip\7z.exe" a ..\osc-capture.7z osc-capture\* -mx
-
-:_exit
 echo Done!

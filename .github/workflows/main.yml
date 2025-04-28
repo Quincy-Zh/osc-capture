@@ -1,0 +1,41 @@
+name: Build Python Executable
+
+on:
+  # 可根据需求修改触发条件，这里设置为推送到 master 分支时触发
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest  # 指定使用 Windows runner
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'  # 可根据项目需求修改 Python 版本
+
+      # 安装依赖
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      # 使用 PyInstaller 构建可执行文件
+      - name: Build executable
+        run: do_build.bat
+        shell: cmd
+
+      # 上传构建结果作为工件
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: osc-capture
+          path: dist\*
