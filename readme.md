@@ -23,7 +23,7 @@
 
 # 安装
 
-程序自身不需要安装，解压缩后直接使用。因为设计 USB 通信，需要安装一些依赖。
+程序自身不需要安装，解压缩后直接使用。因为涉及 USB 通信，需要安装一些依赖。
 
 ## 安装驱动
 
@@ -71,7 +71,11 @@
 
 ### 其他型号的示波器
 
-对于其他型号的示波器需要 VISA 的支持。经过测试 NI 提供的 VISA 库兼容性最好，推荐使用。
+对于其他型号的示波器需要 VISA 的支持。
+
+#### NI-VISA 库
+
+经过测试 NI 提供的 VISA 库兼容性最好，推荐使用。
 
 先从 NI 官网下载 VISA。打开这个网址 https://www.ni.com/zh-cn/support/downloads/drivers/download.ni-visa.html ，选择“受支持的操作系统”和“版本”之后就可以点击下载。如果网络受限，可以点击“离线安装”下载 iso 文件使用。以下的说明内容是使用离线的 iso 文件，在线安装亦可参考。
 
@@ -79,6 +83,12 @@
 
 打开 install.exe 文件，参考下面图片中标注的点安装。安装完成后**需要重启系统**。
 
+#### Rohde & Schwarz VISA 库
 
+R&S 提供的 VISA 库在兼容性方面虽不及 NI-VISA，但是其安装包小，2025年3月更新后，功能也满足要求。
+请自行前往 https://www.rohde-schwarz.com/us/driver-pages/remote-control/3-visa-and-tools_231388.html **R&S®VISA Installers** 下载安装包。
+
+#### 注意
+如果安装了多个厂家的 VISA 库，一般最后安装的 VISA 库会被优先使用。R&S VISA 库提供了一个可视化配置工具，可以选择使用哪个 VISA 库。可以阅读相关文档了解更多信息~
 
 -----
