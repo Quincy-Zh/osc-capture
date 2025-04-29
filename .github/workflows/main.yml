@@ -33,6 +33,14 @@ jobs:
           run: echo VERSION='${{ github.ref_name }}' > .\src\version.py && cat .\src\version.py && do_build.bat
           shell: cmd
 
+        # 上传构建结果作为工件
+        - name: Upload artifact
+          uses: actions/upload-artifact@v4
+          if: github.ref_type != 'tag'
+          with:
+            name: osc-capture
+            path: dist\*.7z
+
         # 打包并上传到 GitHub Release
         - name: Release
           uses: softprops/action-gh-release@v2
