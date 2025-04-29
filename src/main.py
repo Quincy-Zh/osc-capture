@@ -5,8 +5,11 @@ import sys
 import shutil
 import logging
 import tempfile
+import subprocess
 from logging.handlers import RotatingFileHandler
+from threading import Thread
 from typing import Optional
+import requests
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
@@ -20,11 +23,13 @@ from PySide6.QtWidgets import QListWidget, QListWidgetItem, QFileDialog
 from PySide6.QtWidgets import QMenu
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, QSize, QTimer
+from PySide6.QtCore import Qt, QSize, QTimer, Signal
 
 from find_device import DialogFindDevice
 from capture import Capture
 from image_show import ImageWidget
+from version import VERSION
+
 
 mydir = os.path.dirname(os.path.abspath(__file__))
 
@@ -55,6 +60,7 @@ logger.addHandler(consoleHandler)
 
 class MainWindow(QMainWindow):
     winTitle = "示波器截图助手"
+    newVersionFound = Signal(dict)
 
     def __init__(self):
         super().__init__()
@@ -66,6 +72,12 @@ class MainWindow(QMainWindow):
         logger.info("output_dir: " + self.output_dir)
 
         QTimer.singleShot(500, self.do_connect)
+
+        self.newVersionFound.connect(self.new_version_found)
+
+        if VERSION != '0.0.0':
+            version_check_thread = Thread(target=self.__version_check)
+            version_check_thread.start()
 
     def closeEvent(self, event):
         if (
@@ -95,10 +107,6 @@ class MainWindow(QMainWindow):
         self.actionConnect = menu_file.addAction("连接(&C)")
         menu_file.addSeparator()
         actionExit = menu_file.addAction("退出(&X)")
-
-        ## Edit
-        # menu_edit = QMenu('编辑(&E)')
-        # self.menuBar().addMenu(menu_edit)
 
         ## Help
         menu_help = QMenu("帮助(&H)")
@@ -139,6 +147,9 @@ class MainWindow(QMainWindow):
         layout_main.addWidget(self.listWidgetImages)
 
         #
+        self.labelVersionInfo = QLabel()
+        self.statusBar().addWidget(self.labelVersionInfo)
+        #
         self.labelInfo = QLabel("未连接")
         self.statusBar().addPermanentWidget(self.labelInfo)
 
@@ -160,7 +171,7 @@ class MainWindow(QMainWindow):
         QMessageBox.about(
             self,
             "关于本程序",
-            "仪器助手\n\n方便的示波器截图助手，希望给你带来方便\n\nBy Quincy.W(wagnqyfm@foxmail.com)\n\nPower by PySide, Qt",
+            f"示波器截图助手 @v{VERSION}\n\n小小助手，希望给你带来方便\n\nBy Quincy.W(wagnqyfm@foxmail.com)\n\nPower by PySide6, Qt",
         )
 
     def aboutQt(self):
@@ -295,6 +306,25 @@ class MainWindow(QMainWindow):
                 pass
 
         os.removedirs(self.output_dir)
+
+    def __version_check(self):
+        try:
+            req = requests.get(
+                "https://qy-studio.pages.dev/static/osc_capture_version.txt"
+            )
+            if req.status_code == 200:
+                info = req.json()
+                logger.info(f"Version info: {info}, current: {VERSION}")
+
+                if info['version'] != VERSION:
+                    self.newVersionFound.emit(info)
+
+        except Exception as ex:
+            logger.error(f"Version Check Fail: {ex}")
+
+    def new_version_found(self, version_info):
+        self.labelVersionInfo.setText(f'<a href="https://qy-studio.pages.dev/osc_capture_release">新版本 v{version_info["version"]} 已发布，点击查看详细信息</a>')
+        self.labelVersionInfo.setOpenExternalLinks(True)
 
 
 def app_entry():
