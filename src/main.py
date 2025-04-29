@@ -5,7 +5,6 @@ import sys
 import shutil
 import logging
 import tempfile
-import subprocess
 from logging.handlers import RotatingFileHandler
 from threading import Thread
 from typing import Optional

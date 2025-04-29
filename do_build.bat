@@ -10,6 +10,7 @@ pyinstaller -n osc-capture ^
 --hidden-import instruments ^
 --hidden-import pyvisa_py ^
 --hidden-import pyserial ^
+--hidden-import requests ^
 --clean ^
 --noconfirm ^
 -i .\src\icon.ico ^
