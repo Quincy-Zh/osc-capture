@@ -322,7 +322,7 @@ class MainWindow(QMainWindow):
             logger.error(f"Version Check Fail: {ex}")
 
     def new_version_found(self, version_info):
-        self.labelVersionInfo.setText(f'<a href="https://qy-studio.pages.dev/osc_capture_release">新版本 v{version_info["version"]} 已发布，点击查看详细信息</a>')
+        self.labelVersionInfo.setText(f'<a href="https://qy-studio.pages.dev/osc_capture_release">新版本 {version_info["version"]} 已发布，点击查看详细信息</a>')
         self.labelVersionInfo.setOpenExternalLinks(True)
 
 
