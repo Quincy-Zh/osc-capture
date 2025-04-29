@@ -30,7 +30,7 @@ jobs:
   
         # 使用 PyInstaller 构建可执行文件
         - name: Build executable
-          run: echo ${{ github.ref_name }} > src\version.py && do_build.bat
+          run: echo VERSION=${{ github.ref_name }} > src\version.py && do_build.bat
           shell: cmd
 
         # 打包并上传到 GitHub Release
